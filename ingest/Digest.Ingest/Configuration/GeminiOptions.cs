@@ -20,11 +20,15 @@ public sealed class GeminiOptions
     /// <summary>Delay between summary calls to stay within free-tier requests-per-minute limits.</summary>
     public int DelayBetweenCallsMs { get; set; } = 8_000;
 
-    /// <summary>How many times to wait out a 429 and retry a single summary before falling back.</summary>
-    public int MaxRateLimitRetries { get; set; } = 5;
+    /// <summary>
+    /// How many times to wait out a 429 and retry a single summary before falling back.
+    /// Kept small: this only helps a transient per-minute blip. A daily-quota 429 cannot be
+    /// retried away, so retrying harder there just burns more quota and time.
+    /// </summary>
+    public int MaxRateLimitRetries { get; set; } = 2;
 
     /// <summary>Wait before retrying a rate-limited (429) summary when no Retry-After header is given.</summary>
-    public int RateLimitRetryDelayMs { get; set; } = 20_000;
+    public int RateLimitRetryDelayMs { get; set; } = 15_000;
 
     public int MaxOutputTokens { get; set; } = 200;
 

@@ -1,4 +1,5 @@
 using System.ClientModel;
+using System.ClientModel.Primitives;
 using System.Net.Http.Headers;
 using Digest.Ingest.Configuration;
 using Digest.Ingest.Infrastructure;
@@ -71,7 +72,13 @@ builder.Services.AddHttpClient<ID1Client, D1Client>((sp, client) =>
 builder.Services.AddSingleton<IChatClient>(sp =>
 {
     GeminiOptions o = sp.GetRequiredService<IOptions<GeminiOptions>>().Value;
-    var openAiOptions = new OpenAIClientOptions { Endpoint = new Uri(o.Endpoint) };
+    var openAiOptions = new OpenAIClientOptions
+    {
+        Endpoint = new Uri(o.Endpoint),
+        // Disable the SDK's own transient retry so our 429-aware retry in GeminiSummarizer is the
+        // single, quota-friendly source of truth (the SDK default would multiply requests per call).
+        RetryPolicy = new ClientRetryPolicy(maxRetries: 0),
+    };
     // Placeholder key keeps construction valid in --dry-run (the client is never called then).
     string apiKey = string.IsNullOrWhiteSpace(o.ApiKey) ? "unconfigured" : o.ApiKey;
     var openAiClient = new OpenAIClient(new ApiKeyCredential(apiKey), openAiOptions);
