@@ -1,0 +1,21 @@
+# Wrangler configuration for the D1 database. Deliberately NOT a Pages config
+# (no `pages_build_output_dir`): the Cloudflare Pages project — build output dir
+# (`web/dist`) and the production D1 binding (`DB`) — is configured in the Pages
+# dashboard, so this file never injects a placeholder id into a production deploy.
+#
+# This file is read by:
+#   - `wrangler d1 migrations apply solarm2m_digest [--local|--remote]`
+#   - `wrangler d1 execute solarm2m_digest ...`
+#
+# `database_id` is a PLACEHOLDER. `--local` ignores it; the CI workflow substitutes
+# the real value from the D1_DATABASE_ID secret before applying migrations `--remote`.
+# Local Functions dev binds D1 explicitly: see the `dev:api` script in package.json.
+
+name = "solarm2m-digest"
+compatibility_date = "2026-05-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "solarm2m_digest"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"

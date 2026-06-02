@@ -1,0 +1,33 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+
+[*.{cs,csproj,props,targets}]
+indent_size = 4
+
+[*.cs]
+# Real correctness signals stay as build-breaking errors (see TreatWarningsAsErrors).
+dotnet_diagnostic.CS8600.severity = error
+dotnet_diagnostic.CS8602.severity = error
+dotnet_diagnostic.CS8603.severity = error
+dotnet_diagnostic.CS8604.severity = error
+
+# Micro-performance analyzer rules that are not worth the boilerplate in a low-throughput,
+# run-once-a-day batch CLI where readability matters more than allocation counts:
+#   CA1848 - use LoggerMessage source-gen delegates
+#   CA1873 - guard expensive logging arguments
+#   CA1859 - prefer concrete collection types over interfaces
+dotnet_diagnostic.CA1848.severity = silent
+dotnet_diagnostic.CA1873.severity = silent
+dotnet_diagnostic.CA1859.severity = silent
+
+# CA1014 (mark assembly CLSCompliant) is a library concern; this is an executable.
+dotnet_diagnostic.CA1014.severity = silent
+
+[*.{js,jsx,ts,tsx,json,jsonc,css,html,yml,yaml,md,sql}]
+indent_size = 2

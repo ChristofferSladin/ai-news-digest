@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ingest-app:
+    name: .NET build & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: ./global.json
+      - name: Restore
+        run: dotnet restore ingest/Digest.Ingest.slnx
+      - name: Build
+        run: dotnet build ingest/Digest.Ingest.slnx -c Release --no-restore
+      - name: Test
+        run: dotnet test ingest/Digest.Ingest.slnx -c Release --no-build
+
+  web-and-functions:
+    name: Web build & Functions typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install root tooling
+        run: npm ci
+      - name: Type-check Pages Functions
+        run: npm run typecheck:functions
+      - name: Install web deps
+        run: npm --prefix web ci
+      - name: Build web (typecheck + Vite)
+        run: npm --prefix web run build

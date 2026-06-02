@@ -1,0 +1,55 @@
+name: Daily ingest
+
+on:
+  schedule:
+    # ~05:00 UTC daily. Scheduled crons can run late or be skipped under load — fine for a
+    # morning read. The daily run also keeps the workflow from auto-disabling after 60 days.
+    - cron: "0 5 * * *"
+  workflow_dispatch: {}
+
+# Never let two ingests overlap (they write to the same D1).
+concurrency:
+  group: ingest
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: ./global.json
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install Wrangler (pinned)
+        run: npm ci
+
+      - name: Apply D1 migrations (remote)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          D1_DATABASE_ID: ${{ secrets.D1_DATABASE_ID }}
+        run: |
+          # The real database id is kept out of git; inject it for this run only.
+          sed -i "s/REPLACE_WITH_D1_DATABASE_ID/${D1_DATABASE_ID}/" wrangler.toml
+          npx wrangler d1 migrations apply solarm2m_digest --remote
+
+      - name: Run ingest
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          D1_DATABASE_ID: ${{ secrets.D1_DATABASE_ID }}
+        run: dotnet run -c Release --project ingest/Digest.Ingest/Digest.Ingest.csproj

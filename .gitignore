@@ -1,0 +1,42 @@
+# ---------- .NET ----------
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+.vs/
+.idea/
+*.DotSettings.user
+artifacts/
+TestResults/
+*.trx
+*.coverage
+coverage/
+
+# ---------- Node / Vite ----------
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+
+# ---------- Cloudflare / Wrangler ----------
+.wrangler/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+wrangler.toml.bak
+
+# ---------- Secrets (never commit) ----------
+.env
+.env.*
+!.env.example
+*.pem
+appsettings.Local.json
+secrets.json
+
+# ---------- OS / misc ----------
+.DS_Store
+Thumbs.db
+*.log

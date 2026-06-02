@@ -1,0 +1,20 @@
+{
+  "name": "solarm2m-digest",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Infra tooling for the SolarM2M AI-news digest: D1 migrations, local Functions dev, Functions type-check.",
+  "scripts": {
+    "d1:create": "wrangler d1 create solarm2m_digest",
+    "migrate:local": "wrangler d1 migrations apply solarm2m_digest --local",
+    "migrate:remote": "wrangler d1 migrations apply solarm2m_digest --remote",
+    "seed:local": "wrangler d1 execute solarm2m_digest --local --file=./seed.dev.sql",
+    "dev:api": "wrangler pages dev web/dist --compatibility-date=2026-05-01 --port 8788",
+    "typecheck:functions": "tsc -p functions/tsconfig.json"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "4.20260531.1",
+    "typescript": "6.0.3",
+    "wrangler": "4.95.0"
+  }
+}

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Digest.Ingest.Tests/Digest.Ingest.Tests.csproj" />
+  <Project Path="Digest.Ingest/Digest.Ingest.csproj" />
+</Solution>
