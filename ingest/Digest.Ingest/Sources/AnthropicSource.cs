@@ -78,7 +78,7 @@ internal sealed partial class AnthropicSource(
                 items.AddRange(sectionItems);
                 logger.LogInformation("Anthropic {Path}: collected {Count} articles", path, sectionItems.Length);
             }
-            catch (Exception ex) when (ex is not OperationCanceledException)
+            catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
             {
                 logger.LogWarning(ex, "Anthropic: failed to fetch section {Path}", path);
             }

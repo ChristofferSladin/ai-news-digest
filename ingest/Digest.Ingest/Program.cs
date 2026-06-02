@@ -124,13 +124,14 @@ try
     await runner.RunAsync(dryRun, cts.Token);
     return 0;
 }
-catch (OperationCanceledException)
+catch (OperationCanceledException) when (cts.IsCancellationRequested)
 {
     logger.LogWarning("Ingest run cancelled.");
     return 130;
 }
 catch (Exception ex)
 {
+    // Anything else (including a stray timeout that escaped) is a real failure, not a cancel.
     logger.LogError(ex, "Ingest run failed.");
     return 1;
 }

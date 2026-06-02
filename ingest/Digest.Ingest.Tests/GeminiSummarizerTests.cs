@@ -57,4 +57,16 @@ public sealed class GeminiSummarizerTests
 
         Assert.Equal("desc fallback", result);
     }
+
+    [Fact]
+    public async Task Falls_back_when_model_times_out()
+    {
+        // An HTTP timeout surfaces as TaskCanceledException (a subclass of OperationCanceledException).
+        // It must be treated as a transient failure (fall back), not a user cancellation that aborts.
+        var client = new StubChatClient(_ => Task.FromException<ChatResponse>(new TaskCanceledException("timeout")));
+
+        string result = await Create(client).SummarizeAsync(Item("desc timeout"), TestContext.Current.CancellationToken);
+
+        Assert.Equal("desc timeout", result);
+    }
 }

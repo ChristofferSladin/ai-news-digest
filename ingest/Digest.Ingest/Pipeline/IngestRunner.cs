@@ -109,7 +109,10 @@ internal sealed class IngestRunner(
             {
                 return await source.FetchAsync(cancellationToken);
             }
-            catch (Exception ex) when (ex is not OperationCanceledException)
+            // Catch everything except a genuine cancellation of our own token. Crucially this
+            // includes TaskCanceledException from HTTP timeouts (a subclass of
+            // OperationCanceledException) so one slow source never aborts the run.
+            catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
             {
                 logger.LogError(ex, "Source {Source} failed; continuing without it", source.Name);
                 return [];

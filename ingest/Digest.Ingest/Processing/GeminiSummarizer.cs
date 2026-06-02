@@ -46,7 +46,8 @@ internal sealed class GeminiSummarizer(
             string text = TextUtilities.Clean(response.Text);
             return text.Length > 0 ? text : Fallback(item);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        // Includes HTTP timeouts (TaskCanceledException) — only a real cancellation propagates.
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
             logger.LogWarning(ex, "Summarisation failed for {Url}; using source description", item.Url);
             return Fallback(item);
