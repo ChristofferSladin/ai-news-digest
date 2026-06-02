@@ -1,3 +1,5 @@
+using System.ClientModel;
+using System.ClientModel.Primitives;
 using Digest.Ingest.Configuration;
 using Digest.Ingest.Model;
 using Digest.Ingest.Text;
@@ -40,18 +42,44 @@ internal sealed class GeminiSummarizer(
             MaxOutputTokens = opt.MaxOutputTokens,
         };
 
-        try
+        for (int attempt = 1; ; attempt++)
         {
-            ChatResponse response = await chatClient.GetResponseAsync(messages, chatOptions, cancellationToken);
-            string text = TextUtilities.Clean(response.Text);
-            return text.Length > 0 ? text : Fallback(item);
+            try
+            {
+                ChatResponse response = await chatClient.GetResponseAsync(messages, chatOptions, cancellationToken);
+                string text = TextUtilities.Clean(response.Text);
+                return text.Length > 0 ? text : Fallback(item);
+            }
+            // Rate limited (free-tier RPM): wait out the window and retry instead of giving up.
+            catch (ClientResultException ex)
+                when (IsRateLimited(ex) && attempt <= opt.MaxRateLimitRetries && !cancellationToken.IsCancellationRequested)
+            {
+                TimeSpan wait = RetryAfter(ex) ?? TimeSpan.FromMilliseconds(opt.RateLimitRetryDelayMs);
+                logger.LogWarning("Rate limited summarising {Url}; waiting {Seconds:n0}s then retry {Attempt}/{Max}",
+                    item.Url, wait.TotalSeconds, attempt, opt.MaxRateLimitRetries);
+                await Task.Delay(wait, cancellationToken);
+            }
+            // Anything else (incl. HTTP timeouts) → fall back; only a real cancellation propagates.
+            catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                logger.LogWarning(ex, "Summarisation failed for {Url}; using source description", item.Url);
+                return Fallback(item);
+            }
         }
-        // Includes HTTP timeouts (TaskCanceledException) — only a real cancellation propagates.
-        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+    }
+
+    private static bool IsRateLimited(ClientResultException ex) => ex.Status is 429 or 503;
+
+    private static TimeSpan? RetryAfter(ClientResultException ex)
+    {
+        if (ex.GetRawResponse() is PipelineResponse response &&
+            response.Headers.TryGetValue("retry-after", out string? value) &&
+            int.TryParse(value, out int seconds) && seconds > 0)
         {
-            logger.LogWarning(ex, "Summarisation failed for {Url}; using source description", item.Url);
-            return Fallback(item);
+            return TimeSpan.FromSeconds(Math.Min(seconds, 60));
         }
+
+        return null;
     }
 
     private static string BuildUserPrompt(NewsItem item)

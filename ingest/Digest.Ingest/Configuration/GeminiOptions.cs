@@ -18,7 +18,13 @@ public sealed class GeminiOptions
     public string Endpoint { get; set; } = "https://generativelanguage.googleapis.com/v1beta/openai/";
 
     /// <summary>Delay between summary calls to stay within free-tier requests-per-minute limits.</summary>
-    public int DelayBetweenCallsMs { get; set; } = 6_000;
+    public int DelayBetweenCallsMs { get; set; } = 8_000;
+
+    /// <summary>How many times to wait out a 429 and retry a single summary before falling back.</summary>
+    public int MaxRateLimitRetries { get; set; } = 5;
+
+    /// <summary>Wait before retrying a rate-limited (429) summary when no Retry-After header is given.</summary>
+    public int RateLimitRetryDelayMs { get; set; } = 20_000;
 
     public int MaxOutputTokens { get; set; } = 200;
 
