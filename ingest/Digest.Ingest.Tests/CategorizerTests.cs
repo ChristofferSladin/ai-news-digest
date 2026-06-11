@@ -50,6 +50,38 @@ public sealed class CategorizerTests
     }
 
     [Fact]
+    public void Agent_comms_match_wins_over_research_pin()
+    {
+        Assert.Equal(
+            Category.AgentSystems,
+            _categorizer.Categorize(Item("Agent-to-agent protocols for long-horizon tasks", Category.Research)));
+    }
+
+    [Fact]
+    public void Agent_comms_match_wins_over_local_llm_pin()
+    {
+        Assert.Equal(
+            Category.AgentSystems,
+            _categorizer.Categorize(Item("Local models that learn tool use and mcp", Category.LocalLlm)));
+    }
+
+    [Fact]
+    public void Plain_local_llm_hint_without_agent_comms_stays_local_llm()
+    {
+        Assert.Equal(
+            Category.LocalLlm,
+            _categorizer.Categorize(Item("Weekly Ollama discussion thread", Category.LocalLlm)));
+    }
+
+    [Fact]
+    public void Plain_research_hint_without_agent_comms_stays_research()
+    {
+        Assert.Equal(
+            Category.Research,
+            _categorizer.Categorize(Item("A new dataset for retrieval benchmarks", Category.Research)));
+    }
+
+    [Fact]
     public void Falls_back_to_ai_engineering_by_default()
     {
         Assert.Equal(Category.AiEngineering, _categorizer.Categorize(Item("Prompt engineering tips for retrieval")));
