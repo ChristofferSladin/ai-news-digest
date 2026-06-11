@@ -105,6 +105,12 @@ public sealed class InterestProfile
                 "rag", "agent", "agents", "agentic", "eval", "evals", "embedding", "embeddings",
                 "vector", "prompt", "retrieval", "tool use", "function calling", "mcp", "inference",
                 "context window", "fine-tune"),
+
+            [Category.AgentSystems] = K(
+                "multi-agent", "agent-to-agent", "a2a", "agent communication", "agent orchestration",
+                "agent handoff", "multi-agent collaboration", "agent protocol", "mcp",
+                "model context protocol", "tool use", "function calling", "task decomposition",
+                "long-horizon", "langgraph", "autogen", "crewai", "swarm"),
         };
     }
 }

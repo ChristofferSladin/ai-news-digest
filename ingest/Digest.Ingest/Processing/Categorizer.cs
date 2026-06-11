@@ -11,6 +11,7 @@ public sealed class Categorizer(InterestProfile interests)
 {
     private static readonly Category[] Priority =
     [
+        Category.AgentSystems,
         Category.LocalLlm,
         Category.DotNetAzure,
         Category.Domain,

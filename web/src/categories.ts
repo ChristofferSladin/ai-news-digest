@@ -12,6 +12,7 @@ export const CATEGORIES: readonly CategoryMeta[] = [
   { slug: "research", label: "Research", color: "#df7b3f" },
   { slug: "domain", label: "Domain", color: "#d65b92" },
   { slug: "local-llms", label: "Local LLMs", color: "#4f8ff0" },
+  { slug: "agent-systems", label: "Agent systems", color: "#4f9d69" },
 ] as const;
 
 const BY_SLUG = new Map(CATEGORIES.map((c) => [c.slug, c]));

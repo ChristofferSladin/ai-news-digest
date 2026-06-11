@@ -42,6 +42,14 @@ public sealed class CategorizerTests
     }
 
     [Fact]
+    public void Agent_comms_keywords_bucket_to_agent_systems()
+    {
+        Assert.Equal(
+            Category.AgentSystems,
+            _categorizer.Categorize(Item("A protocol for multi-agent collaboration")));
+    }
+
+    [Fact]
     public void Falls_back_to_ai_engineering_by_default()
     {
         Assert.Equal(Category.AiEngineering, _categorizer.Categorize(Item("Prompt engineering tips for retrieval")));
@@ -51,6 +59,7 @@ public sealed class CategorizerTests
     [InlineData(Category.DotNetAzure, "dotnet-azure", ".NET / Azure")]
     [InlineData(Category.LocalLlm, "local-llms", "Local LLMs")]
     [InlineData(Category.Domain, "domain", "Domain / accounting")]
+    [InlineData(Category.AgentSystems, "agent-systems", "Agent systems")]
     public void Category_slug_and_label_are_stable(Category category, string slug, string label)
     {
         Assert.Equal(slug, category.ToSlug());
