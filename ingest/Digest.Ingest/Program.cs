@@ -42,6 +42,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<InterestProfile>();
 builder.Services.AddSingleton<RelevanceScorer>();
 builder.Services.AddSingleton<Categorizer>();
+builder.Services.AddSingleton<DigestSelector>();
 builder.Services.AddSingleton<ISummarizer, GeminiSummarizer>();
 builder.Services.AddSingleton<IDigestRepository, D1DigestRepository>();
 builder.Services.AddSingleton<IngestRunner>();

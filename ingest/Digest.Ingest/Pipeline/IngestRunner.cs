@@ -19,6 +19,7 @@ internal sealed class IngestRunner(
     IEnumerable<INewsSource> sources,
     RelevanceScorer scorer,
     Categorizer categorizer,
+    DigestSelector selector,
     ISummarizer summarizer,
     IDigestRepository repository,
     IOptions<IngestOptions> ingestOptions,
@@ -52,12 +53,7 @@ internal sealed class IngestRunner(
             item.Score = scorer.Score(item);
         }
 
-        List<NewsItem> kept = deduped
-            .Where(i => i.Score >= opt.MinScore)
-            .OrderByDescending(i => i.Score)
-            .ThenByDescending(i => i.PublishedAt ?? DateTimeOffset.MinValue)
-            .Take(opt.MaxItems)
-            .ToList();
+        List<NewsItem> kept = selector.Select(deduped).ToList();
 
         logger.LogInformation("Ranked {Deduped} items, kept top {Kept} (min score {Min})",
             deduped.Count, kept.Count, opt.MinScore);

@@ -30,4 +30,13 @@ public sealed class IngestOptions
 
     /// <summary>Drop items whose relevance score is below this floor, even if slots remain.</summary>
     public double MinScore { get; set; } = 1.0;
+
+    /// <summary>Maximum number of Local LLM items in the final digest (keeps that bucket from dominating).</summary>
+    public int LocalLlmCap { get; set; } = 3;
+
+    /// <summary>Guaranteed minimum Research items, pulled in over score when that many qualify (≥ MinScore).</summary>
+    public int ResearchFloor { get; set; } = 3;
+
+    /// <summary>Guaranteed minimum Agent systems items, pulled in over score when that many qualify (≥ MinScore).</summary>
+    public int AgentSystemsFloor { get; set; } = 1;
 }
