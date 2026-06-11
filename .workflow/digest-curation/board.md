@@ -1,61 +1,44 @@
-## Board: digest-curation   (base: main)
+## Board: digest-curation   (base: main)   — ALL DONE ✓
 
 | id | title                                              | type | status | blocked-by |
 |----|----------------------------------------------------|------|--------|------------|
-| T0 | "Agent systems" category, threaded end-to-end      | afk  | todo   | —          |
-| T1 | Balanced selection policy (DigestSelector)         | afk  | todo   | T0         |
-| T2 | Agent-comms categorisation wins over source pins   | afk  | todo   | T0         |
-| T3 | End-to-end composition test + dry-run check        | afk  | todo   | T1, T2     |
+| T0 | "Agent systems" category, threaded end-to-end      | afk  | done   | —          |
+| T1 | Balanced selection policy (DigestSelector)         | afk  | done   | T0         |
+| T2 | Agent-comms categorisation wins over source pins   | afk  | done   | T0         |
+| T3 | End-to-end composition test + dry-run check        | afk  | done   | T1, T2     |
 
 ```
 DAG:        ┌── T1 ──┐
-   T0 ──────┤        ├── T3
+   T0 ──────┤        ├── T3        all green → qa/digest-curation (60/60)
             └── T2 ──┘
-   (T1 ∥ T2 after T0; they touch disjoint files)
 ```
 
 ---
 
 ### T0 — "Agent systems" category, threaded end-to-end
-- **type:** afk
-- **status:** todo
+- **type:** afk · **status:** done (`ticket/T0` @ 430d51a — filtered 11/11, full 49/49, web build pass)
 - **blocked-by:** —
-- **module:** `Category` (enum/slug/label) + the agent-comms keyword set in `InterestProfile` — the seam every other slice plugs into.
-- **slice:** add `Category.AgentSystems` (slug `agent-systems`, label "Agent systems") → add the confirmed agent-comms keyword set to `InterestProfile` as the AgentSystems vocabulary → `Categorizer` recognises AgentSystems via those keywords (add to the priority list; NOT yet the source-pin precedence — that's T2) → an item flows through the existing pipeline and stores the new slug → the frontend renders it with a label + colour. Existing selection unchanged.
-- **acceptance-check:** `dotnet test ingest/Digest.Ingest.slnx --filter "Category|Categorizer"` green AND `npm --prefix web run build` passes. New test: a non-arXiv agent-comms item (title e.g. "A protocol for multi-agent collaboration") → `Category.AgentSystems`; slug/label round-trip.
-- **files-likely-touched:** `ingest/Digest.Ingest/Model/Category.cs` · `Processing/InterestProfile.cs` · `Processing/Categorizer.cs` · `ingest/Digest.Ingest.Tests/CategorizerTests.cs` (+ a small Category slug/label test) · `web/src/categories.ts`
-- **decisions:** (none yet)
-- **notes:** colour `#4f9d69` (green; distinct from the 5 existing). Keep AgentSystems off the source-pin path here so T2 owns that change alone (collision-free).
+- **module:** `Category` + the agent-comms keyword set in `InterestProfile` — the seam everything plugs into.
+- **acceptance-check:** `dotnet test --filter "Category|Categorizer"` + `npm --prefix web run build` — green.
+- **decisions:** enum doc comment "five"→"the digest groups"; AgentSystems first in Priority; source-pin precedence left for T2; colour `#4f9d69`.
 
 ### T1 — Balanced selection policy (DigestSelector)
-- **type:** afk
-- **status:** todo
+- **type:** afk · **status:** done (`ticket/T1` @ 4fc2b8b — DigestSelector 6/6, full 55/55)
 - **blocked-by:** T0
-- **module:** `DigestSelector` — a narrow "scored items + policy → final ordered list" surface hiding the cap/floor/guarantee/tie-break algorithm.
-- **slice:** new `DigestSelector` + `SelectionPolicy` → add knobs to `IngestOptions` (LocalLlmCap=3, ResearchFloor=3, AgentSystemsFloor=1; MaxItems/MinScore already exist) → `IngestRunner` delegates the final selection to it instead of the inline LINQ → register in `Program.cs` DI. Algorithm: order by score then recency; take greedily but stop adding LocalLlm past the cap; back-fill Research and AgentSystems up to their floors from the next-highest qualifying items (≥MinScore); truncate to MaxItems; guarantees displace the lowest-scoring non-guaranteed items.
-- **acceptance-check:** `dotnet test ingest/Digest.Ingest.slnx --filter DigestSelector` green. Tests assert: LocalLlm capped at 3; Research floored at 3 when ≥3 exist; ≥1 AgentSystems when one exists; floors never padded below MinScore; ties broken by recency; total ≤ MaxItems.
-- **files-likely-touched:** `ingest/Digest.Ingest/Processing/DigestSelector.cs` (new) · `Processing/SelectionPolicy.cs` (new, or fields on IngestOptions) · `Configuration/IngestOptions.cs` · `Pipeline/IngestRunner.cs` · `Program.cs` · `ingest/Digest.Ingest.Tests/DigestSelectorTests.cs` (new)
-- **decisions:** (none yet)
-- **notes:** disjoint from T2's files — safe to run in parallel with T2.
+- **module:** `DigestSelector` — narrow "scored items → final list", hides the caps/floors/guarantee algorithm.
+- **acceptance-check:** `dotnet test --filter DigestSelector` — green.
+- **decisions:** knobs as fields on `IngestOptions` (LocalLlmCap=3/ResearchFloor=3/AgentSystemsFloor=1); floors-first then fill-by-score under the cap; reference-identity de-dup.
 
 ### T2 — Agent-comms categorisation wins over source pins
-- **type:** afk
-- **status:** todo
+- **type:** afk · **status:** done (`ticket/T2` @ c7309b9 — Categorizer 15/15, full 53/53)
 - **blocked-by:** T0
-- **module:** `Categorizer` — same public surface (item → Category), new precedence rule.
-- **slice:** in `Categorizer`, check the agent-comms keyword set FIRST, before the arXiv→Research and r/LocalLLaMA `CategoryHint` pins, so any matching item (including arXiv) buckets to AgentSystems.
-- **acceptance-check:** `dotnet test ingest/Digest.Ingest.slnx --filter Categorizer` green. Tests assert: an arXiv-hinted item with a multi-agent title → AgentSystems (not Research); a LocalLlm-hinted item that also matches agent-comms → AgentSystems (not LocalLlm); a plain local-llm item still → LocalLlm.
-- **files-likely-touched:** `ingest/Digest.Ingest/Processing/Categorizer.cs` · `ingest/Digest.Ingest.Tests/CategorizerTests.cs`
-- **decisions:** (none yet)
-- **notes:** builds on T0's keyword set + enum. Disjoint from T1.
+- **module:** `Categorizer` — same surface (item → Category), new precedence rule.
+- **acceptance-check:** `dotnet test --filter Categorizer` — green.
+- **decisions:** agent-comms pre-pin check added at top of `Categorize()`; removed redundant Priority entry; hoisted `SearchText`. QA-flag: broad shared terms route items into Agent systems (4/15 in live dry-run) — bless or tighten (see qa.md #1).
 
 ### T3 — End-to-end composition test + dry-run check
-- **type:** afk
-- **status:** todo
+- **type:** afk · **status:** done (`ticket/T3` @ 06285c0 — full suite **60/60**)
 - **blocked-by:** T1, T2
-- **module:** an integration test exercising `Categorizer` + `DigestSelector` together — the tracer bullet hitting its target.
-- **slice:** one behavioural test that runs a synthetic NewsItem set through categorisation + selection and asserts the final composition (≤3 local-llm, ≥3 research, ≥1 agent-systems, ≤15, the agent arXiv item present under AgentSystems). Plus a documented dry-run for the human.
-- **acceptance-check:** `dotnet test ingest/Digest.Ingest.slnx` all green (incl. the new composition test) AND `dotnet run --project ingest/Digest.Ingest -- --dry-run` prints a ranked preview whose category breakdown honours the caps/floors.
-- **files-likely-touched:** `ingest/Digest.Ingest.Tests/CompositionTests.cs` (new) — uses existing TestDoubles
-- **decisions:** (none yet)
-- **notes:** confirms T1 and T2 compose correctly; the all-green run is the merge gate.
+- **module:** integration test exercising `Categorizer` + `DigestSelector` together.
+- **acceptance-check:** `dotnet test ingest/Digest.Ingest.slnx` (all) + `dotnet run -- --dry-run` — green; live composition LocalLLM 3 / Research 5 / Agent systems 4 / .NET 1 / AI eng 2.
+- **decisions:** deterministic per-title scores; one integration test; renamed a filler title to avoid a Research-keyword mis-bucket.
