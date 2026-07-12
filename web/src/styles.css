@@ -336,17 +336,6 @@ body {
   cursor: pointer;
 }
 
-.footnote {
-  text-align: center;
-  color: var(--text-faint);
-  font-size: 0.82rem;
-  padding: 16px 0 4px;
-}
-
-.sentinel {
-  height: 1px;
-}
-
 .app-footer {
   border-top: 1px solid var(--border);
   padding: 18px 16px calc(18px + env(safe-area-inset-bottom));

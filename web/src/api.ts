@@ -21,26 +21,9 @@ interface DigestsResponse {
   days: DigestDay[];
 }
 
-export interface FetchDigestsParams {
-  days?: number;
-  /** Exclusive upper-bound date (yyyy-MM-dd) for paging backwards. */
-  before?: string;
-}
-
-export async function fetchDigests(
-  params: FetchDigestsParams = {},
-  signal?: AbortSignal,
-): Promise<DigestDay[]> {
-  const search = new URLSearchParams();
-  if (params.days) {
-    search.set("days", String(params.days));
-  }
-  if (params.before) {
-    search.set("before", params.before);
-  }
-
-  const query = search.toString();
-  const response = await fetch(`/api/digests${query ? `?${query}` : ""}`, { signal });
+/** Fetches every digest day in the store (the API returns uncapped history when `days` is omitted). */
+export async function fetchDigests(signal?: AbortSignal): Promise<DigestDay[]> {
+  const response = await fetch("/api/digests", { signal });
   if (!response.ok) {
     throw new Error(`Failed to load digests (HTTP ${response.status})`);
   }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { CategoryChips } from "./components/CategoryChips";
 import { DigestDaySection } from "./components/DigestDaySection";
 import { Header } from "./components/Header";
@@ -8,9 +8,8 @@ import { useTheme } from "./useTheme";
 
 export function App() {
   const { theme, toggleTheme } = useTheme();
-  const { days, status, error, hasMore, loadMore, reload } = useDigests();
+  const { days, status, error, reload } = useDigests();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const counts = useMemo(() => {
     const map = new Map<string, number>();
@@ -31,23 +30,6 @@ export function App() {
       .filter((day) => day.items.length > 0);
   }, [days, activeCategory]);
 
-  useEffect(() => {
-    const element = sentinelRef.current;
-    if (!element) {
-      return;
-    }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          loadMore();
-        }
-      },
-      { rootMargin: "500px 0px" },
-    );
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [loadMore]);
-
   const showEmpty = status === "ready" && visibleDays.length === 0;
 
   return (
@@ -66,11 +48,6 @@ export function App() {
         {visibleDays.map((day) => (
           <DigestDaySection key={day.date} date={day.date} items={day.items} />
         ))}
-
-        <div ref={sentinelRef} className="sentinel" aria-hidden="true" />
-
-        {status === "loading-more" ? <p className="footnote">Loading earlier digests…</p> : null}
-        {!hasMore && days.length > 0 ? <p className="footnote">You’ve reached the beginning.</p> : null}
       </main>
 
       <footer className="app-footer">
