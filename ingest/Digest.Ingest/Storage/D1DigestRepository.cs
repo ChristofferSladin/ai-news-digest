@@ -12,6 +12,8 @@ internal sealed class D1DigestRepository(ID1Client client, ILogger<D1DigestRepos
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
         "ON CONFLICT(url) DO NOTHING;";
 
+    private const string PurgeSql = "DELETE FROM digest_item WHERE date < ?;";
+
     public async Task<int> UpsertAsync(IReadOnlyList<DigestItem> items, CancellationToken cancellationToken)
     {
         int inserted = 0;
@@ -36,5 +38,12 @@ internal sealed class D1DigestRepository(ID1Client client, ILogger<D1DigestRepos
 
         logger.LogInformation("D1: inserted {Inserted} new of {Total} candidate items", inserted, items.Count);
         return inserted;
+    }
+
+    public async Task<int> PurgeOlderThanAsync(string cutoffDateExclusive, CancellationToken cancellationToken)
+    {
+        D1Outcome outcome = await client.QueryAsync(PurgeSql, [cutoffDateExclusive], cancellationToken);
+        logger.LogInformation("D1: purged {Deleted} item(s) older than {Cutoff}", outcome.Changes, cutoffDateExclusive);
+        return outcome.Changes;
     }
 }
