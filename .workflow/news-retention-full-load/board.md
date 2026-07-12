@@ -2,9 +2,9 @@
 
 | id | title                                   | type | status | blocked-by |
 |----|------------------------------------------|------|--------|------------|
-| T0 | Read API: uncapped history window       | afk  | todo   | -          |
-| T1 | Frontend: single load, drop infinite scroll | hitl | todo   | T0         |
-| T2 | Ingest: 30-day retention purge           | afk  | todo   | -          |
+| T0 | Read API: uncapped history window       | afk  | done   | -          |
+| T1 | Frontend: single load, drop infinite scroll | hitl | flagged | T0         |
+| T2 | Ingest: 30-day retention purge           | afk  | done   | -          |
 
 Ready-set at start: T0, T2 (independent runtimes/spines, no shared seam). T1 becomes ready once
 T0 is terminal (done or flagged).
@@ -13,7 +13,7 @@ T0 is terminal (done or flagged).
 
 ### T0 -- Read API: uncapped history window
 - **type:** afk
-- **status:** todo
+- **status:** done
 - **blocked-by:** -
 - **module:** Digest history window (read API) -- interface: one optional parameter selecting
   either "the N most recent digest days" (explicit) or "all of them" (omitted); hides: the
@@ -36,7 +36,10 @@ T0 is terminal (done or flagged).
   Expect `PASS`: omitting `days` returns every seeded date (>= 35), an explicit `days=3` still
   returns exactly 3.
 - **files-likely-touched:** functions/api/digests.ts, functions/api/_shared.ts
-- **decisions:** (empty -- night agent appends judgement calls here)
+- **decisions:** PASS (ALL=35, CAPPED=3). Branch `ticket/T0`, commit `708b9bd`. Garbage/
+  non-finite `days` values now clamp to `MAX_DAYS` (31) rather than being treated as uncapped
+  (uncapped only when the param is entirely absent). `isValidDate` left untouched in
+  `_shared.ts` -- still used by the off-limits `[date].ts` endpoint.
 - **notes:** Per brief.md decisions log: omitted `days` = uncapped (not "frontend requests
   days=31"). Remove the `before` cursor parameter and its query branch entirely -- nothing
   calls it once T1 lands. `functions/api/digests/[date].ts` (single-day endpoint) is off
@@ -46,7 +49,7 @@ T0 is terminal (done or flagged).
 
 ### T1 -- Frontend: single load, drop infinite scroll
 - **type:** hitl
-- **status:** todo
+- **status:** flagged
 - **blocked-by:** T0
 - **module:** Digest loading (frontend) -- interface: a single hook exposing the currently
   loaded days plus a simple status (loading/ready/error), no paging controls in its public
@@ -65,7 +68,14 @@ T0 is terminal (done or flagged).
   exactly one `/api/digests` request fires on load and clicking every category chip causes zero
   further requests.
 - **files-likely-touched:** web/src/useDigests.ts, web/src/api.ts, web/src/App.tsx
-- **decisions:** (empty -- night agent appends judgement calls here)
+- **decisions:** PASS build (`tsc --noEmit && vite build`), grep confirms no
+  IntersectionObserver/loadMore/hasMore/sentinel/PAGE_DAYS/before remnants. Branch `ticket/T1`,
+  commit `c88c139` on top of T0's `708b9bd`. Dropped `FetchDigestsParams` entirely (no
+  vestigial params surface). Kept one `busyRef` re-entrancy guard in `useDigests` (unrelated
+  to paging -- just stops overlapping `reload()` calls, e.g. a fast Retry double-click).
+  Also removed now-orphaned `.sentinel`/`.footnote` CSS rules from `styles.css` (outside the
+  listed files, but dead weight tied 1:1 to the deleted elements). Flagged (not auto-verified):
+  runtime network behavior needs manual QA -- see manual-QA steps below.
 - **notes:** Remove: the sentinel ref + IntersectionObserver effect in App.tsx, loadMore/
   hasMore/busyRef/hasMoreRef/mergeDays in useDigests.ts, the `before` param plumbing in api.ts.
   Keep: CategoryChips and the client-side `visibleDays` filter in App.tsx exactly as-is --
@@ -77,7 +87,7 @@ T0 is terminal (done or flagged).
 
 ### T2 -- Ingest: 30-day retention purge
 - **type:** afk
-- **status:** todo
+- **status:** done
 - **blocked-by:** -
 - **module:** Digest retention policy (ingest) -- interface: one operation, "purge everything
   older than a given cutoff date," invoked once per ingest run; hides: cutoff-date arithmetic,
@@ -95,7 +105,15 @@ T0 is terminal (done or flagged).
 - **files-likely-touched:** ingest/Digest.Ingest/Pipeline/IngestRunner.cs,
   ingest/Digest.Ingest/Storage/D1DigestRepository.cs,
   ingest/Digest.Ingest/Storage/IDigestRepository.cs, ingest/Digest.Ingest.Tests/*
-- **decisions:** (empty -- night agent appends judgement calls here)
+- **decisions:** PASS -- 6/6 new Purge-filtered tests, 66/66 full suite. Branch `ticket/T2`,
+  commit `ff61ad0`. `PurgeOlderThanAsync(cutoffDateExclusive, ct)` added directly to the
+  existing `IDigestRepository` (no new interface). Cutoff computed via
+  `now.AddDays(-RetentionDays)` off the injected `TimeProvider`, formatted `yyyy-MM-dd`.
+  Retention window is a plain `private const int RetentionDays = 30` on `IngestRunner`, not an
+  `IOptions` knob (nothing else needs it tunable). Purge call sites: guarded by `!dryRun` on
+  the zero-kept early-return path, and unconditional (dry-run already returned earlier) on the
+  normal path. Added `IngestRunnerTests.cs` with new fakes in `TestDoubles.cs` to drive
+  orchestration-level assertions (no prior test exercised `IngestRunner.RunAsync` directly).
 - **notes:** Per brief.md decisions log: retention keys off `date` (digest day), not
   `published_at`/`created_at`. Cutoff = current run's digest date minus 30 days; delete rows
   with `date` strictly less than that boundary. Purge is unconditional except for dry-run (no
