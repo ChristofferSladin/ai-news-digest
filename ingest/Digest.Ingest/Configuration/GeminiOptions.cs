@@ -3,7 +3,7 @@ namespace Digest.Ingest.Configuration;
 /// <summary>
 /// Summarisation settings. The provider is reached through its OpenAI-compatible
 /// endpoint and consumed via <c>Microsoft.Extensions.AI.IChatClient</c>, so swapping
-/// providers is a matter of endpoint + model + key.
+/// providers is a matter of endpoint + model + key
 /// </summary>
 public sealed class GeminiOptions
 {
