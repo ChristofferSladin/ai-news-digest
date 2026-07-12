@@ -67,4 +67,31 @@ public sealed class D1DigestRepositoryTests
 
         Assert.Equal(0, inserted);
     }
+
+    [Fact]
+    public async Task Purge_issues_a_delete_keyed_on_the_date_column_with_the_cutoff_bound()
+    {
+        var fake = new FakeD1Client { ChangesPerCall = 7 };
+        var repo = new D1DigestRepository(fake, NullLogger<D1DigestRepository>.Instance);
+
+        int deleted = await repo.PurgeOlderThanAsync("2026-06-12", TestContext.Current.CancellationToken);
+
+        Assert.Equal(7, deleted);
+        Assert.Single(fake.Calls);
+        (string sql, IReadOnlyList<object?> parameters) = fake.Calls[0];
+        Assert.StartsWith("DELETE FROM digest_item", sql, StringComparison.Ordinal);
+        Assert.Contains("date <", sql, StringComparison.Ordinal);
+        Assert.Equal(["2026-06-12"], parameters);
+    }
+
+    [Fact]
+    public async Task Purge_returns_zero_when_nothing_is_old_enough_to_delete()
+    {
+        var fake = new FakeD1Client { ChangesPerCall = 0 };
+        var repo = new D1DigestRepository(fake, NullLogger<D1DigestRepository>.Instance);
+
+        int deleted = await repo.PurgeOlderThanAsync("2026-06-12", TestContext.Current.CancellationToken);
+
+        Assert.Equal(0, deleted);
+    }
 }

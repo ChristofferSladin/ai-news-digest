@@ -29,6 +29,9 @@ internal sealed class IngestRunner(
 {
     private readonly IReadOnlyList<INewsSource> _sources = sources.ToList();
 
+    /// <summary>Rolling retention window: rows older than this many days (vs. the run's digest date) are purged.</summary>
+    private const int RetentionDays = 30;
+
     /// <summary>
     /// Runs the pipeline and returns the number of newly stored items. In <paramref name="dryRun"/>
     /// mode it fetches, dedupes, scores and ranks, prints a preview, then stops — no model calls,
@@ -61,6 +64,11 @@ internal sealed class IngestRunner(
         if (kept.Count == 0)
         {
             logger.LogWarning("No items met the relevance threshold; nothing to store.");
+            if (!dryRun)
+            {
+                await PurgeOldItemsAsync(now, cancellationToken);
+            }
+
             return 0;
         }
 
@@ -91,10 +99,22 @@ internal sealed class IngestRunner(
         }).ToList();
 
         int inserted = await repository.UpsertAsync(digestItems, cancellationToken);
+        await PurgeOldItemsAsync(now, cancellationToken);
 
         logger.LogInformation("Ingest run complete in {Elapsed:n1}s: {Inserted} new item(s) stored for {Date}",
             stopwatch.Elapsed.TotalSeconds, inserted, digestDate);
         return inserted;
+    }
+
+    /// <summary>
+    /// Purges rows older than a rolling <see cref="RetentionDays"/>-day window, anchored on this
+    /// run's digest date. Unconditional except for dry-run, which the caller must guard for —
+    /// dry-run makes no writes of any kind (existing contract).
+    /// </summary>
+    private async Task PurgeOldItemsAsync(DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        string cutoff = now.AddDays(-RetentionDays).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        await repository.PurgeOlderThanAsync(cutoff, cancellationToken);
     }
 
     private async Task<List<NewsItem>> FetchAllAsync(CancellationToken cancellationToken)

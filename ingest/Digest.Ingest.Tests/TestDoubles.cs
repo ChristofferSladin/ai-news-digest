@@ -1,3 +1,6 @@
+using Digest.Ingest.Model;
+using Digest.Ingest.Processing;
+using Digest.Ingest.Sources;
 using Digest.Ingest.Storage;
 using Microsoft.Extensions.AI;
 
@@ -47,5 +50,41 @@ internal sealed class FakeD1Client : ID1Client
     {
         Calls.Add((sql, parameters));
         return Task.FromResult(new D1Outcome(ChangesPerCall, Calls.Count));
+    }
+}
+
+/// <summary>A news source stub returning a fixed, pre-built set of items — no network calls.</summary>
+internal sealed class FakeNewsSource(string name, IReadOnlyList<NewsItem> items) : INewsSource
+{
+    public string Name { get; } = name;
+
+    public Task<IReadOnlyList<NewsItem>> FetchAsync(CancellationToken cancellationToken) =>
+        Task.FromResult(items);
+}
+
+/// <summary>Summarizer stub that hands back a fixed summary without any model call.</summary>
+internal sealed class FakeSummarizer : ISummarizer
+{
+    public Task<string> SummarizeAsync(NewsItem item, CancellationToken cancellationToken) =>
+        Task.FromResult("Summary");
+}
+
+/// <summary>Records upsert/purge invocations against <see cref="IDigestRepository"/> without touching D1.</summary>
+internal sealed class FakeDigestRepository : IDigestRepository
+{
+    public List<IReadOnlyList<DigestItem>> UpsertCalls { get; } = [];
+
+    public List<string> PurgeCalls { get; } = [];
+
+    public Task<int> UpsertAsync(IReadOnlyList<DigestItem> items, CancellationToken cancellationToken)
+    {
+        UpsertCalls.Add(items);
+        return Task.FromResult(items.Count);
+    }
+
+    public Task<int> PurgeOlderThanAsync(string cutoffDateExclusive, CancellationToken cancellationToken)
+    {
+        PurgeCalls.Add(cutoffDateExclusive);
+        return Task.FromResult(0);
     }
 }
