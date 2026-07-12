@@ -1,40 +1,38 @@
 /// <reference types="@cloudflare/workers-types" />
 
 import type { DigestItem, Env } from "./_shared";
-import { ITEM_COLUMNS, errorResponse, groupByDate, isValidDate, jsonResponse } from "./_shared";
+import { ITEM_COLUMNS, errorResponse, groupByDate, jsonResponse } from "./_shared";
 
-// GET /api/digests?days=7&before=YYYY-MM-DD
-// Returns the most recent `days` digest days (newest first), each with its ranked items.
-// `before` (exclusive) pages backwards through history for infinite scroll.
+// GET /api/digests?days=7
+// Returns digest days (newest first), each with its ranked items.
+// Omitting `days` returns every distinct digest day in the store (uncapped); passing it caps
+// the response to the N most recent days (clamped to 1..MAX_DAYS).
 
-const DEFAULT_DAYS = 7;
 const MAX_DAYS = 31;
+
+/** Parses the optional `days` query param. Null means "uncapped" (param not present at all). */
+function parseDays(rawDays: string | null): number | null {
+  if (rawDays === null) return null;
+  const requested = Number(rawDays);
+  return Number.isFinite(requested)
+    ? Math.min(Math.max(Math.trunc(requested), 1), MAX_DAYS)
+    : MAX_DAYS;
+}
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
   try {
     const url = new URL(context.request.url);
+    const days = parseDays(url.searchParams.get("days"));
 
-    const requestedDays = Number(url.searchParams.get("days") ?? DEFAULT_DAYS);
-    const days = Number.isFinite(requestedDays)
-      ? Math.min(Math.max(Math.trunc(requestedDays), 1), MAX_DAYS)
-      : DEFAULT_DAYS;
-
-    const before = url.searchParams.get("before");
-    if (before !== null && !isValidDate(before)) {
-      return errorResponse("Invalid 'before' date; expected yyyy-MM-dd.", 400);
-    }
-
-    const dateFilter = before ? "WHERE date < ?" : "";
     const sql =
-      `SELECT ${ITEM_COLUMNS} FROM digest_item ` +
-      `WHERE date IN (SELECT DISTINCT date FROM digest_item ${dateFilter} ORDER BY date DESC LIMIT ?) ` +
-      `ORDER BY date DESC, score DESC`;
+      days === null
+        ? `SELECT ${ITEM_COLUMNS} FROM digest_item ORDER BY date DESC, score DESC`
+        : `SELECT ${ITEM_COLUMNS} FROM digest_item ` +
+          `WHERE date IN (SELECT DISTINCT date FROM digest_item ORDER BY date DESC LIMIT ?) ` +
+          `ORDER BY date DESC, score DESC`;
 
-    const binds: (string | number)[] = before ? [before, days] : [days];
-
-    const { results } = await context.env.DB.prepare(sql)
-      .bind(...binds)
-      .all<DigestItem>();
+    const stmt = context.env.DB.prepare(sql);
+    const { results } = await (days === null ? stmt : stmt.bind(days)).all<DigestItem>();
 
     return jsonResponse({ days: groupByDate(results ?? []) }, { cacheSeconds: 900 });
   } catch (err) {
