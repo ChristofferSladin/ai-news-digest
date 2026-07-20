@@ -48,7 +48,11 @@ jobs:
 
       - name: Run ingest
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # Since 2026-07 the summariser talks to the LlmProxy service (alias news-digest),
+          # not Gemini directly — the env var keeps its historical name (see GeminiOptions),
+          # but the secret behind it is the LlmProxy inbound key. The old GEMINI_API_KEY
+          # secret is kept untouched for rollback: revert this one line to switch back.
+          GEMINI_API_KEY: ${{ secrets.LLMPROXY_API_KEY }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           D1_DATABASE_ID: ${{ secrets.D1_DATABASE_ID }}

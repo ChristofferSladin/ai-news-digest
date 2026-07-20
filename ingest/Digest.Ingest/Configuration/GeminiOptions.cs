@@ -3,19 +3,25 @@ namespace Digest.Ingest.Configuration;
 /// <summary>
 /// Summarisation settings. The provider is reached through its OpenAI-compatible
 /// endpoint and consumed via <c>Microsoft.Extensions.AI.IChatClient</c>, so swapping
-/// providers is a matter of endpoint + model + key
+/// providers is a matter of endpoint + model + key. Since 2026-07 the provider is the
+/// LlmProxy service (alias <c>news-digest</c>), which fronts NVIDIA NIM with failover —
+/// not Gemini; the class keeps its historical name to keep the swap config-only.
 /// </summary>
 public sealed class GeminiOptions
 {
     public const string SectionName = "Gemini";
 
-    /// <summary>API key. Supplied via the <c>GEMINI_API_KEY</c> secret; never committed.</summary>
+    /// <summary>
+    /// API key. Supplied via the <c>GEMINI_API_KEY</c> secret; never committed. Carries the
+    /// LlmProxy inbound key for this app (sent as <c>Authorization: Bearer</c>).
+    /// </summary>
     public string ApiKey { get; set; } = string.Empty;
 
-    public string Model { get; set; } = "gemini-2.5-flash";
+    /// <summary>The proxy alias this app is keyed for; routing/model choice lives proxy-side.</summary>
+    public string Model { get; set; } = "news-digest";
 
     /// <summary>OpenAI-compatible base endpoint (must end with a trailing slash).</summary>
-    public string Endpoint { get; set; } = "https://generativelanguage.googleapis.com/v1beta/openai/";
+    public string Endpoint { get; set; } = "https://llmproxy-app.azurewebsites.net/v1/";
 
     /// <summary>Delay between summary calls to stay within free-tier requests-per-minute limits.</summary>
     public int DelayBetweenCallsMs { get; set; } = 8_000;
