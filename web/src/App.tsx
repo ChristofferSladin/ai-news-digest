@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
-import { CategoryChips } from "./components/CategoryChips";
 import { DigestDaySection } from "./components/DigestDaySection";
-import { Header } from "./components/Header";
+import { GlitchBackground } from "./components/GlitchBackground";
+import { Reveal } from "./components/Reveal";
 import { EmptyView, ErrorView, LoadingView } from "./components/StatusViews";
+import { TopBar } from "./components/TopBar";
 import { useDigests } from "./useDigests";
 import { useTheme } from "./useTheme";
 
@@ -32,27 +33,33 @@ export function App() {
 
   const showEmpty = status === "ready" && visibleDays.length === 0;
 
+  // The top bar is fixed; only .feed scrolls.
   return (
     <div className="app">
-      <Header theme={theme} onToggleTheme={toggleTheme} />
+      <GlitchBackground theme={theme} />
 
-      <main className="app-main">
-        {days.length > 0 ? (
-          <CategoryChips active={activeCategory} counts={counts} onSelect={setActiveCategory} />
-        ) : null}
+      <TopBar
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        active={activeCategory}
+        counts={counts}
+        onSelect={setActiveCategory}
+        showFilters={days.length > 0}
+      />
 
-        {status === "loading" ? <LoadingView /> : null}
-        {status === "error" ? <ErrorView message={error} onRetry={reload} /> : null}
-        {showEmpty ? <EmptyView /> : null}
+      <main className="feed">
+        <div className="feed__inner">
+          {status === "loading" ? <LoadingView /> : null}
+          {status === "error" ? <ErrorView message={error} onRetry={reload} /> : null}
+          {showEmpty ? <EmptyView /> : null}
 
-        {visibleDays.map((day) => (
-          <DigestDaySection key={day.date} date={day.date} items={day.items} />
-        ))}
+          {visibleDays.map((day) => (
+            <Reveal key={day.date}>
+              <DigestDaySection date={day.date} items={day.items} />
+            </Reveal>
+          ))}
+        </div>
       </main>
-
-      <footer className="app-footer">
-        <span>Updated daily · built with .NET, Gemini &amp; Cloudflare</span>
-      </footer>
     </div>
   );
 }

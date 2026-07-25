@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { CATEGORIES } from "../categories";
+import { useHorizontalWheel } from "../useHorizontalWheel";
 
 interface CategoryChipsProps {
   active: string | null;
@@ -9,9 +10,10 @@ interface CategoryChipsProps {
 
 export function CategoryChips({ active, counts, onSelect }: CategoryChipsProps) {
   const total = [...counts.values()].reduce((sum, n) => sum + n, 0);
+  const scrollerRef = useHorizontalWheel<HTMLElement>();
 
   return (
-    <nav className="chips" aria-label="Filter by category">
+    <nav className="chips" ref={scrollerRef} aria-label="Filter by category">
       <Chip label="All" count={total} selected={active === null} onClick={() => onSelect(null)} />
       {CATEGORIES.map((category) => {
         const count = counts.get(category.slug) ?? 0;
