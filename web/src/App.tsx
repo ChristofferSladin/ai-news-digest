@@ -1,16 +1,22 @@
 import { useMemo, useState } from "react";
 import { DigestDaySection } from "./components/DigestDaySection";
 import { GlitchBackground } from "./components/GlitchBackground";
+import { ReposView } from "./components/ReposView";
 import { Reveal } from "./components/Reveal";
 import { EmptyView, ErrorView, LoadingView } from "./components/StatusViews";
-import { TopBar } from "./components/TopBar";
+import { TopBar, type View } from "./components/TopBar";
 import { useDigests } from "./useDigests";
+import { useRepos } from "./useRepos";
 import { useTheme } from "./useTheme";
 
 export function App() {
   const { theme, toggleTheme } = useTheme();
   const { days, status, error, reload } = useDigests();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [view, setView] = useState<View>("digest");
+
+  // Held here rather than inside ReposView so the fetched feed survives tab switches.
+  const repos = useRepos(view === "repos");
 
   const counts = useMemo(() => {
     const map = new Map<string, number>();
@@ -41,6 +47,8 @@ export function App() {
       <TopBar
         theme={theme}
         onToggleTheme={toggleTheme}
+        view={view}
+        onSelectView={setView}
         active={activeCategory}
         counts={counts}
         onSelect={setActiveCategory}
@@ -49,15 +57,21 @@ export function App() {
 
       <main className="feed">
         <div className="feed__inner">
-          {status === "loading" ? <LoadingView /> : null}
-          {status === "error" ? <ErrorView message={error} onRetry={reload} /> : null}
-          {showEmpty ? <EmptyView /> : null}
+          {view === "repos" ? (
+            <ReposView {...repos} />
+          ) : (
+            <>
+              {status === "loading" ? <LoadingView /> : null}
+              {status === "error" ? <ErrorView message={error} onRetry={reload} /> : null}
+              {showEmpty ? <EmptyView /> : null}
 
-          {visibleDays.map((day) => (
-            <Reveal key={day.date}>
-              <DigestDaySection date={day.date} items={day.items} />
-            </Reveal>
-          ))}
+              {visibleDays.map((day) => (
+                <Reveal key={day.date}>
+                  <DigestDaySection date={day.date} items={day.items} />
+                </Reveal>
+              ))}
+            </>
+          )}
         </div>
       </main>
     </div>

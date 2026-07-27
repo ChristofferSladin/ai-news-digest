@@ -18,6 +18,17 @@ export function SunMark({ size = 24 }: { size?: number }) {
   );
 }
 
+export function StarIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M12 3.2l2.7 5.5 6 .9-4.35 4.24 1.03 6L12 17l-5.38 2.84 1.03-6L3.3 9.6l6-.9Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
 export function MoonIcon({ size = 20 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">

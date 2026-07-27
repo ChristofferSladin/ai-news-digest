@@ -59,6 +59,15 @@ export function formatRelativeTime(iso: string | null): string {
   return `${weeks}w ago`;
 }
 
+/** Star counts the way GitHub shows them: "938", "12.4k", "150k". */
+export function formatCompactCount(value: number): string {
+  if (value < 1000) {
+    return String(value);
+  }
+  const thousands = value / 1000;
+  return thousands < 100 ? `${thousands.toFixed(1).replace(/\.0$/, "")}k` : `${Math.round(thousands)}k`;
+}
+
 /** Bare hostname for display, e.g. "devblogs.microsoft.com". */
 export function hostnameOf(url: string): string {
   try {

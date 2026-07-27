@@ -93,9 +93,51 @@ body {
   gap: 12px;
 }
 
-/* Holds the toggle to the right while the digest is still loading. */
+/* Tightens the gap when the filter row follows, so the bar keeps one rhythm. */
+.topbar__inner:has(+ .topbar__filters) {
+  padding-bottom: 4px;
+}
+
+/* Second row: only rendered in the digest view, so it never leaves a gap. */
+.topbar__filters {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 16px 9px;
+}
+
+/* Pushes the theme toggle to the right of the tabs. */
 .topbar__spacer {
   flex: 1;
+}
+
+/* ---------- View tabs ---------- */
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 12px;
+  border: 1px solid var(--chip-border);
+  background: var(--chip-bg);
+}
+
+.tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  padding: 6px 15px;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.tab[data-selected="true"] {
+  color: var(--text);
+  background: var(--card);
+  box-shadow: var(--shadow);
 }
 
 .icon-button {
@@ -292,6 +334,37 @@ body {
 .card__time::before {
   content: "·";
   margin-right: 10px;
+}
+
+/* ---------- Repo card extras ---------- */
+.card__stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.card__topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 11px;
+}
+
+.topic {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--chip-border);
+  background: var(--chip-bg);
+  color: var(--text-faint);
+}
+
+/* Provenance line above the repo sections: this view is live, not stored. */
+.feed__note {
+  margin: 0 2px 16px;
+  font-size: 0.78rem;
+  color: var(--text-faint);
 }
 
 /* ---------- Notices / buttons / footnotes ---------- */

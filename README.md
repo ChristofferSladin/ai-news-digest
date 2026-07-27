@@ -49,6 +49,7 @@ binding. The Gemini key and Cloudflare token live only in GitHub Actions secrets
 | Summarisation  | **Gemini 2.5 Flash** (free tier) via its OpenAI-compatible endpoint, consumed through `Microsoft.Extensions.AI` `IChatClient` (provider-swappable) |
 | Store          | **Cloudflare D1** (SQLite). Writes via the D1 HTTP REST API; schema via Wrangler migrations |
 | Read API       | **Cloudflare Pages Function** with a D1 binding (`/api/digests`, `/api/digests/:date`) |
+| GitHub feed    | **Cloudflare Pages Function** proxying the GitHub search API (`/api/github/repos`) — live, not stored |
 | Frontend       | **React + TypeScript + Vite**, mobile-first installable **PWA** with offline cache |
 | Hosting        | **Cloudflare Pages** on the apex domain `solarm2m.com`                   |
 
@@ -89,6 +90,35 @@ Ranking favours: .NET/C# AI tooling, `Microsoft.Extensions.AI`, Agent Framework,
 Kernel, Azure OpenAI / AI Foundry, RAG, agents, evals, document intelligence / structured
 extraction, local LLMs / Ollama, and AI for accounting / fintech.
 
+## GitHub repos (the "Repos" tab)
+
+`GET /api/github/repos` → `{ generatedAt, newest: Repo[], trending: Repo[] }`.
+
+Deliberately **not** in D1 and not part of the ingest run: this data is cheap to re-query
+and a stale row would be worse than a fresh miss. The Function is the whole pipeline.
+
+- **New today** — the 5 highest-starred AI repos created in the last two days. A same-day
+  window regularly holds fewer than five worth showing, hence two.
+- **Trending** — repos pushed in the last 7 days, created within the last year, ≥100 stars,
+  ranked by **stars per day since creation**. GitHub has no trending endpoint, and raw star
+  counts only ever surface the all-time giants. Entries legitimately persist for weeks.
+
+Topics (`ai`, `llm`, `machine-learning`) are AND-ed by GitHub's search syntax and `OR` is
+not valid there, so each topic is its own query; results are merged and re-ranked globally,
+which makes a noisy topic harmless. A failed topic query degrades the list instead of the
+response — only an all-topics failure returns an error.
+
+Everything is served from one `caches.default` entry (30 min), because GitHub's search API
+allows 10 req/min unauthenticated — and a Worker shares its egress IP with the rest of the
+edge, so calling GitHub from the browser is not an option. Set `GITHUB_TOKEN` to raise that
+to 30 req/min:
+
+```bash
+npx wrangler pages secret put GITHUB_TOKEN
+```
+
+Any public-data token works; no scopes are needed. Without it the endpoint still functions.
+
 ---
 
 ## Secrets
@@ -99,6 +129,7 @@ extraction, local LLMs / Ollama, and AI for accounting / fintech.
 | `CF_API_TOKEN`    | ingest (D1 REST) + Wrangler migrations   | Cloudflare API token scoped to **D1 : Edit**  |
 | `CF_ACCOUNT_ID`   | ingest (D1 REST) + Wrangler              | Cloudflare account id                         |
 | `D1_DATABASE_ID`  | ingest (D1 REST) + Wrangler migrations   | D1 database id from `wrangler d1 create`      |
+| `GITHUB_TOKEN`    | `/api/github/repos` (optional)           | Public-data GitHub token, **no scopes**; a Pages secret, not a CI one |
 
 Secrets are provided as **GitHub Actions secrets** in CI and as **`dotnet user-secrets`** or
 environment variables locally. They are never committed. See [`.env.example`](.env.example).

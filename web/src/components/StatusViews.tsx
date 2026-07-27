@@ -16,10 +16,16 @@ export function LoadingView() {
   );
 }
 
-export function ErrorView({ message, onRetry }: { message: string | null; onRetry: () => void }) {
+interface ErrorViewProps {
+  message: string | null;
+  onRetry: () => void;
+  title?: string;
+}
+
+export function ErrorView({ message, onRetry, title = "Couldn’t load the digest" }: ErrorViewProps) {
   return (
     <div className="notice" role="alert">
-      <p className="notice__title">Couldn’t load the digest</p>
+      <p className="notice__title">{title}</p>
       <p className="notice__body">{message ?? "Please try again."}</p>
       <button type="button" className="button" onClick={onRetry}>
         Retry

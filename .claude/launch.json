@@ -6,6 +6,20 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "web", "run", "dev"],
       "port": 5173
+    },
+    {
+      "name": "pages-api",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "wrangler",
+        "pages",
+        "dev",
+        "web/dist",
+        "--compatibility-date=2026-05-01",
+        "--d1=DB=solarm2m_digest",
+        "--port=8788"
+      ],
+      "port": 8788
     }
   ]
 }
