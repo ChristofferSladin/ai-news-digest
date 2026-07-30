@@ -58,7 +58,7 @@ public sealed class InterestProfile
             ("embedding", 3), ("embeddings", 3), ("vector", 2), ("retrieval", 3),
 
             // Local LLMs / Ollama.
-            ("ollama", 5), ("local llm", 5), ("local model", 4), ("llama.cpp", 4), ("gguf", 4),
+            ("ollama", 5), ("local llm", 5), ("mlx", 5), ("local model", 4), ("llama.cpp", 4), ("gguf", 4),
             ("vllm", 4), ("lm studio", 4), ("quantization", 3), ("quantized", 3), ("open-weight", 3),
             ("open weights", 3), ("on-device", 3),
 
@@ -67,7 +67,7 @@ public sealed class InterestProfile
             ("reconciliation", 4), ("audit", 3), ("compliance", 3), ("enterprise", 2),
 
             // General model/tooling vocabulary — lower weight to avoid drowning the specifics.
-            ("llm", 3), ("large language model", 3), ("fine-tune", 3), ("fine-tuning", 3),
+            ("llm", 3), ("k3", 3), ("large language model", 3), ("fine-tune", 3), ("fine-tuning", 3),
             ("inference", 2), ("prompt", 2), ("context window", 3), ("copilot", 3),
             ("claude", 2), ("anthropic", 2), ("openai", 2), ("gemini", 2), ("llama", 2),
             ("mistral", 2), ("qwen", 2), ("deepseek", 2), ("phi", 2),
@@ -86,7 +86,7 @@ public sealed class InterestProfile
             [Category.LocalLlm] = K(
                 "ollama", "local llm", "local model", "llama.cpp", "gguf", "vllm", "lm studio",
                 "quantization", "quantized", "open-weight", "open weights", "on-device", "self-host",
-                "self-hosted", "localllama"),
+                "self-hosted", "localllama", "mlx", "k3"),
 
             [Category.DotNetAzure] = K(
                 ".net", "c#", "asp.net", "blazor", "dotnet", "azure", "semantic kernel",
