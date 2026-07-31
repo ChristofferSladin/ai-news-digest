@@ -1,0 +1,14 @@
+# Cloudflare Pages applies a public, max-age=14400 default to static assets.
+# That's fine (even desirable) for hashed bundle files under /assets/, which
+# are immutable and already cache-busted by filename — but it's actively
+# harmful for the service worker script itself: a stale cached sw.js means
+# the browser never notices a new deploy exists, so it keeps running last
+# week's app against this week's (now-404) hashed asset filenames. The
+# service worker spec says browsers should always bypass HTTP cache when
+# checking a SW script for updates, but Safari/WebKit has a long history of
+# not honoring that reliably, so force it here instead of trusting the client.
+/sw.js
+  Cache-Control: no-cache
+
+/manifest.webmanifest
+  Cache-Control: no-cache
