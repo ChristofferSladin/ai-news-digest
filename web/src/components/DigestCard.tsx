@@ -1,21 +1,17 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { DigestItem } from "../api";
 import { categoryMeta } from "../categories";
 import { formatRelativeTime, hostnameOf } from "../format";
+import type { Theme } from "../useTheme";
+import { CardEffects } from "./CardEffects";
 
-export function DigestCard({ item }: { item: DigestItem }) {
+export function DigestCard({ item, theme }: { item: DigestItem; theme: Theme }) {
   const meta = categoryMeta(item.category);
   const when = formatRelativeTime(item.publishedAt);
   const host = hostnameOf(item.url);
 
-  return (
-    <a
-      className="card"
-      href={item.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      style={{ "--accent": meta.color } as CSSProperties}
-    >
+  const content: ReactNode = (
+    <>
       <div className="card__top">
         <span className="badge">{meta.label}</span>
         <span className="card__source">{item.source}</span>
@@ -26,6 +22,20 @@ export function DigestCard({ item }: { item: DigestItem }) {
         {host ? <span>{host}</span> : null}
         {when ? <span className="card__time">{when}</span> : null}
       </div>
+    </>
+  );
+
+  return (
+    <a
+      className="card"
+      href={item.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ "--accent": meta.color } as CSSProperties}
+    >
+      <CardEffects theme={theme} accent={meta.color}>
+        {content}
+      </CardEffects>
     </a>
   );
 }

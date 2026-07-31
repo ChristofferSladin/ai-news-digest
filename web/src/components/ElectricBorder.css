@@ -1,0 +1,87 @@
+.electric-border {
+  --electric-light-color: oklch(from var(--electric-border-color) l c h);
+  position: relative;
+  border-radius: inherit;
+  overflow: visible;
+  isolation: isolate;
+}
+
+.eb-canvas-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.eb-canvas {
+  display: block;
+}
+
+.eb-content {
+  position: relative;
+  border-radius: inherit;
+  z-index: 1;
+}
+
+.eb-layers {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.eb-glow-1,
+.eb-glow-2,
+.eb-background-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.eb-glow-1 {
+  border: 2px solid oklch(from var(--electric-border-color) l c h / 0.6);
+  filter: blur(1px);
+}
+
+.eb-glow-2 {
+  border: 2px solid var(--electric-light-color);
+  filter: blur(4px);
+}
+
+.eb-background-glow {
+  z-index: -1;
+  transform: scale(1.1);
+  filter: blur(32px);
+  opacity: 0.3;
+  background: linear-gradient(-30deg, var(--electric-light-color), transparent, var(--electric-border-color));
+}
+
+/* Local integration: DigestCard.tsx wraps its content in <ElectricBorder>
+   inside `.card`, which already has its own 15px/16px padding. The canvas
+   measures `.electric-border`'s own bounding rect to trace the wobbly line,
+   so if it sat inside that padding the drawn border would float ~15px in
+   from the real card edge. Negative-margin bleed cancels the padding so
+   `.electric-border` fills the true card box, then `.eb-content` restores
+   the same padding so the title/summary text keeps its original inset.
+
+   pointer-events: none also lives here: `.electric-border` is `position:
+   relative` (a positioned element) and renders after SpotlightCard's
+   `.card-spotlight` overlay in the DOM, so without this it was the topmost
+   box over the whole card and silently ate every mousemove — SpotlightCard's
+   own handler (on `.card-spotlight`, underneath) never saw the cursor,
+   killing its radial glow. Nothing inside `.card` needs its own pointer
+   handling (the whole card is one link), so this is safe to leave off for
+   all descendants, unlike an earlier version of this integration that had
+   to carve out an exception for a hover-triggered title effect since removed. */
+.card > .electric-border {
+  margin: -15px -16px;
+  pointer-events: none;
+}
+.card > .electric-border > .eb-content {
+  padding: 15px 16px;
+}

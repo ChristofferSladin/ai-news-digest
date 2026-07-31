@@ -1,0 +1,31 @@
+/* Local edit: upstream hardcodes a dark card box (border/background/padding/
+   radius) meant to stand alone, sized to its own content. Here it's a
+   decorative, childless overlay stretched edge-to-edge over `.card` via
+   `position: absolute; inset: 0` (rather than nesting inside `.card`'s
+   padding), so the glow reaches the true card edges instead of stopping at
+   the padded content box. `.card` supplies `position: relative` for this to
+   anchor against. Re-vendoring restores the hardcoded standalone box. */
+.card-spotlight {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+  --spotlight-color: rgba(255, 255, 255, 0.05);
+}
+
+.card-spotlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--mouse-x) var(--mouse-y), var(--spotlight-color), transparent 80%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+/* Dark theme only — this whole family of effects is off for light mode. */
+:root[data-theme="dark"] .card-spotlight:hover::before {
+  opacity: 0.6;
+}

@@ -58,7 +58,7 @@ export function App() {
       <main className="feed">
         <div className="feed__inner">
           {view === "repos" ? (
-            <ReposView {...repos} />
+            <ReposView {...repos} theme={theme} />
           ) : (
             <>
               {status === "loading" ? <LoadingView /> : null}
@@ -67,7 +67,7 @@ export function App() {
 
               {visibleDays.map((day) => (
                 <Reveal key={day.date}>
-                  <DigestDaySection date={day.date} items={day.items} />
+                  <DigestDaySection date={day.date} items={day.items} theme={theme} />
                 </Reveal>
               ))}
             </>

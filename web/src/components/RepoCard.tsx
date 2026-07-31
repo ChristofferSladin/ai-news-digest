@@ -1,25 +1,22 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { Repo } from "../github";
 import { formatCompactCount, formatRelativeTime } from "../format";
+import type { Theme } from "../useTheme";
+import { CardEffects } from "./CardEffects";
 import { StarIcon } from "./icons";
 
 interface RepoCardProps {
   repo: Repo;
   /** Section colour, applied to the card's left rule and language badge. */
   accent: string;
+  theme: Theme;
 }
 
-export function RepoCard({ repo, accent }: RepoCardProps) {
+export function RepoCard({ repo, accent, theme }: RepoCardProps) {
   const [, shortName] = repo.name.split("/");
 
-  return (
-    <a
-      className="card"
-      href={repo.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      style={{ "--accent": accent } as CSSProperties}
-    >
+  const content: ReactNode = (
+    <>
       <div className="card__top">
         <span className="badge">{repo.language ?? "Repo"}</span>
         <span className="card__source">{repo.owner}</span>
@@ -44,6 +41,20 @@ export function RepoCard({ repo, accent }: RepoCardProps) {
         </span>
         <span className="card__time">pushed {formatRelativeTime(repo.pushedAt)}</span>
       </div>
+    </>
+  );
+
+  return (
+    <a
+      className="card"
+      href={repo.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ "--accent": accent } as CSSProperties}
+    >
+      <CardEffects theme={theme} accent={accent}>
+        {content}
+      </CardEffects>
     </a>
   );
 }

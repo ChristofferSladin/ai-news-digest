@@ -263,12 +263,13 @@ body {
 
 /* ---------- Card ---------- */
 .card {
+  position: relative;
   display: block;
+  overflow: hidden;
   text-decoration: none;
   color: inherit;
   background: var(--card);
   border: 1px solid var(--border);
-  border-left: 3px solid var(--accent, var(--border));
   border-radius: 14px;
   padding: 15px 16px;
   box-shadow: var(--shadow);
@@ -277,6 +278,12 @@ body {
 
 .card:hover {
   background: var(--card-hover);
+}
+
+/* Dark theme only: tint the hover state with the card's own category accent
+   instead of the flat --card-hover swap normies get in light mode. */
+:root[data-theme="dark"] .card:hover {
+  background: color-mix(in srgb, var(--accent, var(--border)) 12%, var(--card-hover));
 }
 
 .card:active {

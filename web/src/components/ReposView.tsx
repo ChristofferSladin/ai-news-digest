@@ -1,5 +1,6 @@
 import { formatRelativeTime } from "../format";
 import type { UseRepos } from "../useRepos";
+import type { Theme } from "../useTheme";
 import { Reveal } from "./Reveal";
 import { RepoSection } from "./RepoSection";
 import { ErrorView, LoadingView } from "./StatusViews";
@@ -8,7 +9,7 @@ import { ErrorView, LoadingView } from "./StatusViews";
 const NEW_ACCENT = "#5aa9e6";
 const TRENDING_ACCENT = "#e0803a";
 
-export function ReposView({ feed, status, error, reload }: UseRepos) {
+export function ReposView({ feed, status, error, reload, theme }: UseRepos & { theme: Theme }) {
   if (status === "loading") {
     return <LoadingView />;
   }
@@ -31,6 +32,7 @@ export function ReposView({ feed, status, error, reload }: UseRepos) {
           note={`${feed.newest.length} repos`}
           accent={NEW_ACCENT}
           repos={feed.newest}
+          theme={theme}
         />
       </Reveal>
 
@@ -40,6 +42,7 @@ export function ReposView({ feed, status, error, reload }: UseRepos) {
           note="by stars per day"
           accent={TRENDING_ACCENT}
           repos={feed.trending}
+          theme={theme}
         />
       </Reveal>
     </>
