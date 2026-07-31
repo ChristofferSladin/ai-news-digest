@@ -406,6 +406,16 @@ body {
   cursor: pointer;
 }
 
+.button:hover {
+  background: var(--card-hover);
+}
+
+.load-more {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 28px;
+}
+
 /* ---------- Skeletons ---------- */
 .card--skeleton {
   border-left-color: var(--border);
