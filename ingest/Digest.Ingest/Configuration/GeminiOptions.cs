@@ -4,7 +4,7 @@ namespace Digest.Ingest.Configuration;
 /// Summarisation settings. The provider is reached through its OpenAI-compatible
 /// endpoint and consumed via <c>Microsoft.Extensions.AI.IChatClient</c>, so swapping
 /// providers is a matter of endpoint + model + key. Since 2026-07 the provider is the
-/// LlmProxy service (alias <c>news-digest</c>), which fronts NVIDIA NIM with failover —
+/// LlmProxy service, which fronts a measured multi-provider fleet with failover —
 /// not Gemini; the class keeps its historical name to keep the swap config-only.
 /// </summary>
 public sealed class GeminiOptions
@@ -17,8 +17,13 @@ public sealed class GeminiOptions
     /// </summary>
     public string ApiKey { get; set; } = string.Empty;
 
-    /// <summary>The proxy alias this app is keyed for; routing/model choice lives proxy-side.</summary>
-    public string Model { get; set; } = "news-digest";
+    /// <summary>
+    /// The wire contract with LlmProxy: <c>"auto"</c> means "you choose". Since the knowledge-proxy
+    /// rebuild there are no aliases — the proxy infers what a request needs from its body, ranks the
+    /// models it has measured as capable, and fails over across providers. Any other value is
+    /// rejected with a 400. The old <c>news-digest</c> alias no longer exists.
+    /// </summary>
+    public string Model { get; set; } = "auto";
 
     /// <summary>OpenAI-compatible base endpoint (must end with a trailing slash).</summary>
     public string Endpoint { get; set; } = "https://llmproxy-app.azurewebsites.net/v1/";

@@ -48,7 +48,7 @@ jobs:
 
       - name: Run ingest
         env:
-          # Since 2026-07 the summariser talks to the LlmProxy service (alias news-digest),
+          # Since 2026-07 the summariser talks to the LlmProxy service (model:"auto"),
           # not Gemini directly — the env var keeps its historical name (see GeminiOptions),
           # but the secret behind it is the LlmProxy inbound key. The old GEMINI_API_KEY
           # secret is kept untouched for rollback: revert this one line to switch back.
