@@ -3,7 +3,8 @@ name: Daily ingest
 on:
   schedule:
     # ~05:00 UTC daily. Scheduled crons can run late or be skipped under load — fine for a
-    # morning read. The daily run also keeps the workflow from auto-disabling after 60 days.
+    # morning read. Runs alone don't count as repo activity — the keepalive step below
+    # re-enables the workflow each run so GitHub's 60-day inactivity auto-disable never fires.
     - cron: "0 5 * * *"
   workflow_dispatch: {}
 
@@ -19,6 +20,9 @@ jobs:
   ingest:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: write # keepalive step only
     steps:
       - uses: actions/checkout@v4
 
@@ -57,3 +61,9 @@ jobs:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           D1_DATABASE_ID: ${{ secrets.D1_DATABASE_ID }}
         run: dotnet run -c Release --project ingest/Digest.Ingest/Digest.Ingest.csproj
+
+      - name: Keep schedule alive (resets the 60-day inactivity timer)
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow enable ingest.yml --repo "${{ github.repository }}"
